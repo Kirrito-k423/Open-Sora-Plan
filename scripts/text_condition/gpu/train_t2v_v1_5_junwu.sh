@@ -72,6 +72,7 @@ accelerate launch \
     --ema_decay 0.999 \
     --drop_short_ratio 0.0 \
     --pretrained "/data/t00906153/data/OpenSorav1.5.pth" \
+    --savepath "/data/t00906153/data/save" \
     --hw_stride 16 \
     --train_fps 16 \
     --seed 1234 \

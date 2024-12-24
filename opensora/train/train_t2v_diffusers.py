@@ -785,6 +785,20 @@ def main(args):
             # Add noise to the model input according to the noise magnitude at each timestep
             # (this is the forward diffusion process)
 
+            if args.savepath:
+                save_path_prefix = f"{args.savepath}/rank_{torch.distributed.get_rank()}_step_{step_}"
+                timesteps_path = f"{save_path_prefix}_timesteps.pt"
+                if os.path.exists(timesteps_path):
+                    timesteps = torch.load(timesteps_path, map_location=timesteps.device)
+                else:
+                    torch.save(timesteps.cpu(), timesteps_path)
+
+                noise_path = f"{save_path_prefix}_noise.pt"
+                if os.path.exists(noise_path):
+                    noise = torch.load(noise_path, map_location=noise.device)
+                else:
+                    torch.save(noise.cpu(), noise_path)
+
             noisy_model_input = noise_scheduler.add_noise(model_input, noise, timesteps)
         else:
             # Sample a random timestep for each image
