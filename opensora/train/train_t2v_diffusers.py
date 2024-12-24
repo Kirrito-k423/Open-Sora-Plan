@@ -486,10 +486,9 @@ def main(args):
             # gc.collect()
         else:
             # --pretrained path/to/.pth or .pt or some other format
-            pretrained_checkpoint = torch.load(args.pretrained, map_location='cpu')
+            checkpoint = torch.load(args.pretrained, map_location='cpu')
             if 'model' in checkpoint:
-                pretrained_checkpoint = pretrained_checkpoint['model']
-            checkpoint = get_common_weights(pretrained_checkpoint, model_state_dict)
+                checkpoint = checkpoint['model']
             missing_keys, unexpected_keys = model.load_state_dict(checkpoint, strict=True)
         logger.info(f'missing_keys {len(missing_keys)} {missing_keys}, unexpected_keys {len(unexpected_keys)}')
         logger.info(f'Successfully load {len(model_state_dict) - len(missing_keys)}/{len(model_state_dict)} keys from {args.pretrained}!')
@@ -621,6 +620,11 @@ def main(args):
     logger.info(f"After accelerator.prepare, memory_allocated: {torch.cuda.memory_allocated()/GB:.2f} GB", main_process_only=True)
 
     model.train()
+
+    if args.pretrained and not os.path.exists(args.pretrained):
+        if accelerator.process_index == 0:
+            torch.save(model.state_dict(), args.pretrained)
+        exit()
 
     # FIXME: EMAModel from diffusers have bug, which can NOT resume ema_decay
     if args.use_ema:
