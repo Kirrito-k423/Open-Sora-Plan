@@ -36,19 +36,21 @@ export TOKENIZERS_PARALLELISM=false
 # accelerate launch \
 #     --config_file scripts/accelerate_configs/deepspeed_zero2_config.yaml \
 
+logpath="/data/t00906153/data/OSPv1_5.log"
+
 accelerate launch \
     --config_file scripts/accelerate_configs/deepspeed_zero2_config.yaml \
     opensora/train/train_t2v_diffusers.py \
     --ema_deepspeed_config_file scripts/accelerate_configs/zero3.json \
     --model OpenSoraT2V_v1_5-3B/122 \
-    --text_encoder_name_1 google/t5-v1_1-xl \
+    --text_encoder_name_1 /data2/opensoraplan/weights/google/mt5-xxl \
     --cache_dir "../../cache_dir/" \
     --text_encoder_name_2 laion/CLIP-ViT-bigG-14-laion2B-39B-b160k \
     --cache_dir "../../cache_dir/" \
     --dataset t2v \
-    --data scripts/train_data/image_data_debug.txt \
+    --data /data/t00906153/data/data_perf.txt\
     --ae WFVAEModel_D32_8x8x8 \
-    --ae_path "/storage/lcm/WF-VAE/results/Middle888" \
+    --ae_path "/data2/opensoraplan/weights/wfvae_v1_5" \
     --sample_rate 1 \
     --num_frames 1 \
     --max_hxw 65536 \
@@ -83,4 +85,4 @@ accelerate launch \
     --proj_name "debug_train" \
     --log_name part1 \
     --trained_data_global_step 0 \
-    --skip_abnorml_step --ema_decay_grad_clipping 0.99 
+    --skip_abnorml_step --ema_decay_grad_clipping 0.99 2>&1 |tee $logpath 
