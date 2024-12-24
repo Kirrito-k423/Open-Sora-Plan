@@ -78,7 +78,6 @@ accelerate launch \
     --group_data \
     --use_decord \
     --output_dir="debug_train" \
-    --vae_fp32 \
     --rf_scheduler \
     --proj_name "debug_train" \
     --log_name part1 \
