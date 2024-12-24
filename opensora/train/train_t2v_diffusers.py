@@ -968,6 +968,8 @@ def main(args):
                 accelerator.clip_grad_norm_(params_to_clip, args.max_grad_norm)
             optimizer.step()
             avg_loss_list = accelerator.gather(loss)
+            if accelerator.is_main_process:
+                accelerator.print(f"avg loss: {avg_loss_list}")
 
         progress_info.train_loss += avg_loss_list.mean().detach().item() / args.gradient_accumulation_steps
         optimizer.zero_grad()
