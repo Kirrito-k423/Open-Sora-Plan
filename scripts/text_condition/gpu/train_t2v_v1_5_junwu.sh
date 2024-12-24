@@ -57,7 +57,7 @@ accelerate launch \
     --gradient_checkpointing \
     --train_batch_size=2 \
     --train_image_batch_size=1 \
-    --dataloader_num_workers 16 \
+    --dataloader_num_workers 0 \
     --learning_rate=1e-4 \
     --lr_scheduler="constant_with_warmup" \
     --mixed_precision="bf16" \

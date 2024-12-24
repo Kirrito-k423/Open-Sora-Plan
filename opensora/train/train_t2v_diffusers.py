@@ -252,11 +252,11 @@ def create_ema_model(
 
 def main(args):
 
+    from msprobe.pytorch import seed_all
+    seed_all()
+
     logging_dir = Path(args.output_dir, args.logging_dir)
 
-    if torch_npu is not None and npu_config is not None:
-        npu_config.print_msg(args)
-        npu_config.seed_everything(args.seed)
     accelerator_project_config = ProjectConfiguration(project_dir=args.output_dir, logging_dir=logging_dir)
 
     accelerator = Accelerator(
@@ -297,9 +297,6 @@ def main(args):
         transformers.utils.logging.set_verbosity_error()
         diffusers.utils.logging.set_verbosity_error()
 
-    # If passed along, set the training seed now.
-    if args.seed is not None:
-        set_seed(args.seed, device_specific=True)
 
     generator = torch.Generator().manual_seed(args.seed)
 

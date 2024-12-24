@@ -207,6 +207,8 @@ class T2V_dataset(Dataset):
             return self.get_batch_image(data)
     
     def get_video(self, video_data):
+        from msprobe.pytorch import seed_all
+        seed_all()
         video_path = video_data['path']
         assert os.path.exists(video_path), f"file {video_path} do not exist!"
         sample_h = video_data['resolution']['sample_height']
