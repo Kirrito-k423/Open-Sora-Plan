@@ -45,7 +45,7 @@ accelerate launch \
     --model OpenSoraT2V_v1_5-3B/122 \
     --text_encoder_name_1 /data2/opensoraplan/weights/google/mt5-xxl \
     --cache_dir "../../cache_dir/" \
-    --text_encoder_name_2 laion/CLIP-ViT-bigG-14-laion2B-39B-b160k \
+    --text_encoder_name_2 "" \
     --cache_dir "../../cache_dir/" \
     --dataset t2v \
     --data /data/t00906153/data/data_perf.txt\
