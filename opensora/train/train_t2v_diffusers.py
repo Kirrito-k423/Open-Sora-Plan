@@ -1280,6 +1280,7 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", type=str, default=None, help="The output directory where the model predictions and checkpoints will be written.")
     parser.add_argument("--proj_name", type=str, default=None, help="Custom project names for the runs in W&B logger, default to output_dir.")
     parser.add_argument("--log_name", type=str, default=None, help="Custom run names for the runs in W&B logger, default to proj_name or output_dir.")
+    parser.add_argument("--savepath", type=str, default=None, help="Prefix for the file path where fixed noise and timestep data will be saved.")
     parser.add_argument("--checkpoints_total_limit", type=int, default=None, help=("Max number of checkpoints to store."))
     parser.add_argument("--checkpointing_steps", type=int, default=500,
                         help=(
