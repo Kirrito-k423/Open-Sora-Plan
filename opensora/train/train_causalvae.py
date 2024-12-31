@@ -256,6 +256,7 @@ def train(args):
             del model_config['resolution']
         
         wandb.init(
+            mode = "offline",
             project=os.environ.get("WANDB_PROJECT", "causalvideovae"),
             config=dict(**model_config, **args_config),
             name=get_exp_name(args),

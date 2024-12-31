@@ -70,6 +70,22 @@ from opensora.sample.pipeline_opensora import OpenSoraPipeline
 from opensora.models.causalvideovae import ae_stride_config, ae_wrapper
 from opensora.utils.deepspeed_utils import backward, deepspeed_zero_init_disabled_context_manager
 
+import opensora.config as config
+
+from rich.traceback import install
+install(show_locals=True)
+
+from rich.console import Console
+console = Console()
+
+import logging
+from rich.logging import RichHandler
+FORMAT = "%(message)s"
+logging.basicConfig(
+    level="NOTSET", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
+)
+log = logging.getLogger("rich")
+
 # from opensora.utils.utils import monitor_npu_power
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
@@ -265,6 +281,7 @@ def main(args):
         log_with=args.report_to,
         project_config=accelerator_project_config,
     )
+    config.rank_id.append(accelerator.process_index)
 
     if args.skip_abnorml_step and accelerator.distributed_type == DistributedType.DEEPSPEED:
         deepspeed.runtime.engine.DeepSpeedEngine.backward = backward
@@ -281,7 +298,7 @@ def main(args):
     # The trackers initializes automatically on the main process.
     if accelerator.is_main_process:
         accelerator.init_trackers(os.path.basename(args.proj_name or args.output_dir), config=vars(args), 
-                                  init_kwargs=wandb_init_kwargs if args.report_to == "wandb" else None)
+                                  init_kwargs=wandb_init_kwargs if args.report_to == "wandb" else {})
 
     # Make one log on every process with the configuration for debugging.
     logging.basicConfig(
@@ -313,7 +330,7 @@ def main(args):
         weight_dtype = torch.bfloat16
 
     # =======================================================================================================
-    # STEP 0: Resume parameter
+    console.log("STEP 0: Resume parameter")
     checkpoint_path, global_step = None, 0
     initial_global_step_for_sampler = args.trained_data_global_step
     # Potentially load in the weights and states from a previous save
@@ -344,7 +361,7 @@ def main(args):
     # =======================================================================================================
 
     # =======================================================================================================
-    # STEP 1: Check and Assert
+    console.log("STEP 1: Check and Assert")
     ae_stride_t, ae_stride_h, ae_stride_w = ae_stride_config[args.ae]
     args.ae_stride_t, args.ae_stride_h, args.ae_stride_w = ae_stride_t, ae_stride_h, ae_stride_w
     args.ae_stride = ae_stride = args.ae_stride_h
@@ -368,7 +385,7 @@ def main(args):
     # =======================================================================================================
 
     # =======================================================================================================
-    # STEP 2: Create Dataset & Dataloader
+    console.log("STEP 2: Create Dataset & Dataloader")
 
     total_batch_size = args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
     total_batch_size = total_batch_size // args.sp_size * args.train_sp_batch_size
@@ -400,7 +417,7 @@ def main(args):
 
 
     # =======================================================================================================
-    # STEP 3: Create VAE model
+    console.log("STEP 3: Create VAE model")
     with ContextManagers(deepspeed_zero_init_disabled_context_manager()):
         kwargs = {}
         ae = ae_wrapper[args.ae](args.ae_path, cache_dir=args.cache_dir, **kwargs).eval()
@@ -414,7 +431,7 @@ def main(args):
 
 
     # =======================================================================================================
-    # STEP 4: Create text encoder model
+    console.log("STEP 4: Create text encoder model")
     with ContextManagers(deepspeed_zero_init_disabled_context_manager()):
         text_enc_1 = get_text_warpper(args.text_encoder_name_1)(args).eval()
         text_enc_1.requires_grad_(False)
@@ -433,7 +450,7 @@ def main(args):
 
 
     # =======================================================================================================
-    # STEP 5: Create diffusion model 
+    console.log("STEP 5: Create diffusion model")
     latent_size_t = (train_dataset.max_thw[0] + (ae_stride_t - 1)) // ae_stride_t
     latent_size_h = train_dataset.max_thw[1] // ae_stride
     latent_size_w = train_dataset.max_thw[2] // ae_stride
@@ -519,7 +536,7 @@ def main(args):
 
 
     # =======================================================================================================
-    # STEP 6: Create EMAModel
+    console.log("STEP 6: Create EMAModel")
     args.world_size = accelerator.num_processes
     if args.use_ema:
         ema_model_state_dict = model.state_dict()
@@ -535,7 +552,7 @@ def main(args):
 
 
     # =======================================================================================================
-    # STEP 7: Create Scheduler
+    console.log("STEP 7: Create Scheduler")
     kwargs = dict(
         prediction_type=args.prediction_type, 
         rescale_betas_zero_snr=args.rescale_betas_zero_snr
@@ -554,7 +571,7 @@ def main(args):
         torch.backends.cuda.matmul.allow_tf32 = True
 
     # =======================================================================================================
-    # STEP 8: Create Optimizer
+    console.log("STEP 8: Create Optimizer")
 
     assert args.optimizer.lower() == "adamw"
     # params_to_optimize = model.parameters()
@@ -583,7 +600,7 @@ def main(args):
     
 
     # =======================================================================================================
-    # STEP 9: LR_Scheduler
+    console.log("STEP 9: LR_Scheduler")
 
     # Scheduler and math around the number of training steps.
     override_max_train_steps = False
@@ -602,7 +619,7 @@ def main(args):
 
 
     # =======================================================================================================
-    # STEP 10: Prepare everything with our `accelerator`.
+    console.log("STEP 10: Prepare everything with our `accelerator`.")
     # model.requires_grad_(False)
     # model.patch_embed.requires_grad_(True)
 
@@ -648,7 +665,7 @@ def main(args):
     args.num_train_epochs = math.ceil(args.max_train_steps / num_update_steps_per_epoch)
 
     # =======================================================================================================
-    # Step 11: Train!
+    console.log("Step 11: Train!")
     logger.info("***** Running training *****")
     logger.info(f"  Model = {model}")
     logger.info(f'  Model config = {model_config}')

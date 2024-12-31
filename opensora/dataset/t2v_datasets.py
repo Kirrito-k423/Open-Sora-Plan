@@ -72,9 +72,9 @@ class SingletonMeta(type):
         return cls._instances[cls]
 
 def find_closest_y(x, vae_stride_t=4, model_ds_t=1):
-    # min_num_frames = 29
-    # if x < min_num_frames:
-    #     return -1  
+    min_num_frames = 29
+    if x < min_num_frames:
+        return -1
     for y in range(x, min_num_frames - 1, -1):
         if (y - 1) % vae_stride_t == 0 and ((y - 1) // vae_stride_t + 1) % model_ds_t == 0:
             # 4, 8: y in [29, 61, 93, 125, 157, 189, 221, 253, 285, 317, 349, 381, 413, 445, 477, 509, ...]
@@ -84,13 +84,13 @@ def find_closest_y(x, vae_stride_t=4, model_ds_t=1):
             # 8, 4: y in [57, 89]
             # 8, 8: y in [57]
             return y
-    return -1 
+    return -1
 
 def filter_resolution(h, w, max_h_div_w_ratio=17/16, min_h_div_w_ratio=8 / 16):
     if h / w <= max_h_div_w_ratio and h / w >= min_h_div_w_ratio:
         return True
     return False
-        
+
 def read_parquet(path):
     df = pd.read_parquet(path)
     data = df.to_dict(orient='records')
@@ -462,6 +462,7 @@ class T2V_dataset(Dataset):
 
                 if path.endswith('.mp4'):
                     fps = i.get('fps', 24)
+                    i['num_frames'] = fps * i['duration']
                     # max 5.0 and min 1.0 are just thresholds to filter some videos which have suitable duration. 
                     # if i['num_frames'] > self.too_long_factor * (self.num_frames * fps / self.train_fps * self.speed_factor):  # too long video is not suitable for this training stage (self.num_frames)
                     #     cnt_too_long += 1

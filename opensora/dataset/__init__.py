@@ -3,7 +3,7 @@ from transformers import AutoTokenizer, AutoImageProcessor
 
 from torchvision import transforms
 from torchvision.transforms import Lambda
-
+from icecream import ic
 try:
     import torch_npu
 except:
@@ -29,13 +29,14 @@ def getdataset(args):
             SpatialStrideCropVideo(stride=args.hw_stride, force_5_ratio=args.force_5_ratio), 
         ]
 
-    tokenizer_1 = AutoTokenizer.from_pretrained(args.text_encoder_name_1, cache_dir=args.cache_dir)
+    tokenizer_1 = AutoTokenizer.from_pretrained(args.text_encoder_name_1, cache_dir=args.cache_dir, clean_up_tokenization_spaces=True)
     # tokenizer_1 = AutoTokenizer.from_pretrained('/storage/cache_dir/t5-v1_1-xl', cache_dir=args.cache_dir)
     # tokenizer_1 = AutoTokenizer.from_pretrained('/storage/ongoing/new/Open-Sora-Plan/cache_dir/mt5-xxl', cache_dir=args.cache_dir)
     tokenizer_2 = None
-    if args.text_encoder_name_2 is not None:
-        tokenizer_2 = AutoTokenizer.from_pretrained(args.text_encoder_name_2, cache_dir=args.cache_dir)
+    if args.text_encoder_name_2 and args.text_encoder_name_2 is not None:
+        tokenizer_2 = AutoTokenizer.from_pretrained(args.text_encoder_name_2, cache_dir=args.cache_dir, clean_up_tokenization_spaces=True)
         # tokenizer_2 = AutoTokenizer.from_pretrained('/storage/cache_dir/CLIP-ViT-bigG-14-laion2B-39B-b160k', cache_dir=args.cache_dir)
+    ic('after tokenizer')
     if args.dataset == 't2v':
         transform = transforms.Compose([
             ToTensorVideo(),
